@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import {
   THICKNESS_PRESETS,
@@ -10,14 +9,7 @@ import {
   type ThicknessMm,
 } from "@/lib/geometry";
 import { NetDiagram } from "@/components/NetDiagram";
-
-const BoxScene = dynamic(
-  () => import("@/components/BoxScene").then((m) => m.BoxScene),
-  {
-    ssr: false,
-    loading: () => <div className="scene-frame scene-loading">Loading 3D view…</div>,
-  },
-);
+import { BoxScene } from "@/components/BoxScene";
 
 export function Simulator() {
   const [innerWidth, setInnerWidth] = useState(80);

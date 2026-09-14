@@ -84,6 +84,6 @@ The file `Acrylic plastic.pdf` was referenced in the brief but was not available
 ## Stack
 
 - Next.js (App Router)
-- React Three Fiber + Drei (3D acrylic box)
+- SVG isometric box + 2D net (no WebGL — works on school Chromebooks)
 - Tailwind CSS v4
 - Deploy target: Vercel
