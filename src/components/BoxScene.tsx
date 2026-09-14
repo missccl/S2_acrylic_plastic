@@ -1,6 +1,7 @@
 "use client";
 
 import type { CutList } from "@/lib/geometry";
+import { sheetColorForThickness } from "@/lib/geometry";
 
 type Props = {
   cut: CutList;
@@ -110,7 +111,8 @@ export function BoxScene({
   const minY = Math.min(...allY) - 20;
   const maxY = Math.max(...allY) + 20;
 
-  const paper = cut.thickness < 0.5;
+  const swatch = sheetColorForThickness(cut.thickness);
+  const gid = `t${Math.round(cut.thickness)}`;
 
   return (
     <div className="scene-frame">
@@ -118,34 +120,30 @@ export function BoxScene({
         className="iso-svg"
         viewBox={`${minX} ${minY} ${maxX - minX} ${maxY - minY}`}
         role="img"
-        aria-label="Isometric acrylic open box"
+        aria-label={`Isometric ${swatch.name} acrylic open box, ${cut.thickness} mm`}
       >
         <defs>
-          <linearGradient id="acrylTop" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#b7e6f5" stopOpacity="0.85" />
-            <stop offset="100%" stopColor="#5cb8d4" stopOpacity="0.55" />
+          <linearGradient id={`${gid}-top`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor={swatch.top} stopOpacity="0.92" />
+            <stop offset="100%" stopColor={swatch.side} stopOpacity="0.62" />
           </linearGradient>
-          <linearGradient id="acrylSide" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#7ec8e3" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#3a7f98" stopOpacity="0.55" />
-          </linearGradient>
-          <linearGradient id="paperFill" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#f3ebe0" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#d9cbb8" stopOpacity="0.9" />
+          <linearGradient id={`${gid}-side`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={swatch.top} stopOpacity="0.78" />
+            <stop offset="100%" stopColor={swatch.side} stopOpacity="0.7" />
           </linearGradient>
         </defs>
 
         {/* Draw back-to-front for simple depth */}
-        <IsoBox faces={back.faces} paper={paper} />
-        <IsoBox faces={left.faces} paper={paper} />
-        <IsoBox faces={base.faces} paper={paper} />
-        <IsoBox faces={right.faces} paper={paper} />
-        <IsoBox faces={front.faces} paper={paper} />
+        <IsoBox faces={back.faces} topId={`${gid}-top`} sideId={`${gid}-side`} stroke={swatch.stroke} />
+        <IsoBox faces={left.faces} topId={`${gid}-top`} sideId={`${gid}-side`} stroke={swatch.stroke} />
+        <IsoBox faces={base.faces} topId={`${gid}-top`} sideId={`${gid}-side`} stroke={swatch.stroke} />
+        <IsoBox faces={right.faces} topId={`${gid}-top`} sideId={`${gid}-side`} stroke={swatch.stroke} />
+        <IsoBox faces={front.faces} topId={`${gid}-top`} sideId={`${gid}-side`} stroke={swatch.stroke} />
 
         {ghost}
       </svg>
       <p className="scene-hint">
-        Isometric view · thickness {cut.thickness.toFixed(0)} mm
+        Isometric view · {cut.thickness.toFixed(0)} mm · {swatch.name}
         {explode > 0.02 ? " · exploded" : ""}
       </p>
     </div>
@@ -154,15 +152,16 @@ export function BoxScene({
 
 function IsoBox({
   faces,
-  paper,
+  topId,
+  sideId,
+  stroke,
 }: {
   faces: string[];
-  paper: boolean;
+  topId: string;
+  sideId: string;
+  stroke: string;
 }) {
-  const fills = paper
-    ? ["url(#paperFill)", "url(#paperFill)", "url(#paperFill)"]
-    : ["url(#acrylTop)", "url(#acrylSide)", "url(#acrylSide)"];
-  const stroke = paper ? "#c4b49a" : "#9fd8ef";
+  const fills = [`url(#${topId})`, `url(#${sideId})`, `url(#${sideId})`];
 
   return (
     <g>
