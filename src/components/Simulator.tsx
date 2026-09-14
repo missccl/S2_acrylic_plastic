@@ -6,6 +6,7 @@ import {
   cutListForInner,
   formatMm,
   naiveAssembly,
+  sheetColorForThickness,
   type ThicknessMm,
 } from "@/lib/geometry";
 import { NetDiagram } from "@/components/NetDiagram";
@@ -117,18 +118,25 @@ export function Simulator() {
           <fieldset className="control-block">
             <legend>Acrylic thickness</legend>
             <div className="thickness-row">
-              {THICKNESS_PRESETS.map((p) => (
-                <button
-                  key={p.value}
-                  type="button"
-                  className={`chip ${thickness === p.value ? "active" : ""}`}
-                  onClick={() => setThickness(p.value)}
-                  title={p.hint}
-                >
-                  <span className="chip-value">{p.label}</span>
-                  <span className="chip-hint">{p.hint}</span>
-                </button>
-              ))}
+              {THICKNESS_PRESETS.map((p) => {
+                const swatch = sheetColorForThickness(p.value);
+                return (
+                  <button
+                    key={p.value}
+                    type="button"
+                    className={`chip ${thickness === p.value ? "active" : ""}`}
+                    onClick={() => setThickness(p.value)}
+                    title={`${p.hint} · ${swatch.name}`}
+                    style={{ ["--chip-swatch" as string]: swatch.chip }}
+                  >
+                    <span className="chip-swatch" aria-hidden="true" />
+                    <span className="chip-copy">
+                      <span className="chip-value">{p.label}</span>
+                      <span className="chip-hint">{p.hint} · {swatch.name}</span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
             <label className="range-label">
               Fine tune
@@ -140,7 +148,7 @@ export function Simulator() {
                 value={thickness}
                 onChange={(e) => setThickness(Number(e.target.value) as ThicknessMm)}
               />
-              <strong>{formatMm(thickness)}</strong>
+              <strong>{formatMm(thickness)} · {sheetColorForThickness(thickness).name}</strong>
             </label>
           </fieldset>
 

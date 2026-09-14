@@ -87,3 +87,15 @@ The file `Acrylic plastic.pdf` was referenced in the brief but was not available
 - SVG isometric box + 2D net (no WebGL — works on school Chromebooks)
 - Tailwind CSS v4
 - Deploy target: Vercel
+
+
+## Vercel deploy notes
+
+The npm lines about `eslint` being deprecated and `allow-scripts` / `unrs-resolver` are **warnings**, not the real failure by themselves.
+
+This repo already includes:
+
+- `"allowScripts": { "unrs-resolver": false }` in `package.json` (silences npm 12 script policy noise)
+- `"engines": { "node": "22.x" }` so Vercel uses a supported Node version
+
+If deploy still fails, open the Vercel build log and scroll past the yellow warnings to the first red **Error** line, then share that section.

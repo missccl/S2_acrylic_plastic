@@ -81,3 +81,69 @@ export const THICKNESS_PRESETS: { value: ThicknessMm; label: string; hint: strin
   { value: 3, label: "3 mm", hint: "Common school stock" },
   { value: 5, label: "5 mm", hint: "Thick / rigid acrylic" },
 ];
+
+/** Distinct sheet tints so students can spot thickness changes quickly. */
+export type SheetSwatch = {
+  name: string;
+  top: string;
+  side: string;
+  stroke: string;
+  netFill: string;
+  chip: string;
+};
+
+const SHEET_SWATCHES: Record<ThicknessMm, SheetSwatch> = {
+  0: {
+    name: "paper cream",
+    top: "#f3ebe0",
+    side: "#d9cbb8",
+    stroke: "#c4b49a",
+    netFill: "rgba(217, 203, 184, 0.45)",
+    chip: "#d9cbb8",
+  },
+  1: {
+    name: "ice blue",
+    top: "#b7eaf8",
+    side: "#5ec4e0",
+    stroke: "#7ed4ee",
+    netFill: "rgba(94, 196, 224, 0.28)",
+    chip: "#5ec4e0",
+  },
+  2: {
+    name: "mint",
+    top: "#b8f0de",
+    side: "#4db89a",
+    stroke: "#6ed0b4",
+    netFill: "rgba(77, 184, 154, 0.28)",
+    chip: "#4db89a",
+  },
+  3: {
+    name: "amber",
+    top: "#ffe0a3",
+    side: "#e0a03a",
+    stroke: "#f0b84a",
+    netFill: "rgba(224, 160, 58, 0.28)",
+    chip: "#e0a03a",
+  },
+  4: {
+    name: "coral",
+    top: "#ffc9bc",
+    side: "#d4786a",
+    stroke: "#e89284",
+    netFill: "rgba(212, 120, 106, 0.28)",
+    chip: "#d4786a",
+  },
+  5: {
+    name: "deep teal",
+    top: "#9fd9cf",
+    side: "#2f8f7b",
+    stroke: "#4aaf9a",
+    netFill: "rgba(47, 143, 123, 0.3)",
+    chip: "#2f8f7b",
+  },
+};
+
+export function sheetColorForThickness(thickness: number): SheetSwatch {
+  const key = Math.max(0, Math.min(5, Math.round(thickness))) as ThicknessMm;
+  return SHEET_SWATCHES[key];
+}

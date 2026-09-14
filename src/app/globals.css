@@ -367,10 +367,31 @@ a {
 
 .chip {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.1rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.55rem;
   text-align: left;
+}
+
+.chip-swatch {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 3px;
+  flex-shrink: 0;
+  background: var(--chip-swatch, var(--acrylic));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.chip-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.chip.active {
+  border-color: var(--chip-swatch, var(--acrylic));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--chip-swatch, var(--acrylic)) 45%, transparent);
 }
 
 .chip-value {

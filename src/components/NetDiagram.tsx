@@ -1,7 +1,7 @@
 "use client";
 
 import type { CutList } from "@/lib/geometry";
-import { formatMm } from "@/lib/geometry";
+import { formatMm, sheetColorForThickness } from "@/lib/geometry";
 
 type Props = {
   cut: CutList;
@@ -27,8 +27,10 @@ export function NetDiagram({ cut, mode }: Props) {
   const ox = pad + h + gap;
   const oy = pad + h + gap;
 
-  const stroke = mode === "naive" ? "#d4724a" : "#5cb8d4";
-  const fill = mode === "naive" ? "rgba(212,114,74,0.18)" : "rgba(92,184,212,0.2)";
+  const swatch = sheetColorForThickness(t);
+  // Keep orange outline in "ignore thickness" mode as a warning, but fill stays sheet-coloured.
+  const stroke = mode === "naive" ? "#d4724a" : swatch.stroke;
+  const fill = swatch.netFill;
 
   return (
     <div className="net-wrap">
@@ -96,10 +98,10 @@ export function NetDiagram({ cut, mode }: Props) {
       </svg>
       <p className="net-caption">
         {t === 0
-          ? "Paper net — panels have no thickness."
+          ? `Paper net (${swatch.name}) — panels have no thickness.`
           : mode === "compensated"
-            ? `Thickness ${formatMm(t)} is built into the cut sizes so the inside stays correct.`
-            : `Same panel sizes as paper, but ${formatMm(t)} walls shrink the inside.`}
+            ? `${formatMm(t)} ${swatch.name} sheet — thickness is built into the cut sizes so the inside stays correct.`
+            : `Same panel sizes as paper, but ${formatMm(t)} ${swatch.name} walls shrink the inside.`}
       </p>
     </div>
   );
@@ -142,7 +144,8 @@ function Panel({
           y={y}
           width={Math.min(t, w)}
           height={d}
-          fill="rgba(232,168,56,0.35)"
+          fill={stroke}
+          opacity={0.35}
           stroke="none"
         />
       ) : null}
