@@ -96,6 +96,6 @@ The npm lines about `eslint` being deprecated and `allow-scripts` / `unrs-resolv
 This repo already includes:
 
 - `"allowScripts": { "unrs-resolver": false }` in `package.json` (silences npm 12 script policy noise)
-- `"engines": { "node": "22.x" }` so Vercel uses a supported Node version
+- `"engines": { "node": "24.x" }` so Vercel uses a supported Node version
 
 If deploy still fails, open the Vercel build log and scroll past the yellow warnings to the first red **Error** line, then share that section.
