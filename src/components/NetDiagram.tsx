@@ -1,7 +1,8 @@
 "use client";
 
 import type { CutList } from "@/lib/geometry";
-import { formatMm, sheetColorForThickness } from "@/lib/geometry";
+import { formatMm, panelSwatch, sheetColorForThickness } from "@/lib/geometry";
+import type { PanelRole } from "@/lib/geometry";
 
 type Props = {
   cut: CutList;
@@ -10,7 +11,7 @@ type Props = {
 
 /**
  * Flat 2D net of an open box (base + 4 walls), drawn to scale in SVG.
- * Thickness is drawn as a hatch band so students see material volume.
+ * Each panel type uses a different colour (matching the isometric view).
  */
 export function NetDiagram({ cut, mode }: Props) {
   const t = cut.thickness;
@@ -28,71 +29,64 @@ export function NetDiagram({ cut, mode }: Props) {
   const oy = pad + h + gap;
 
   const swatch = sheetColorForThickness(t);
-  // Keep orange outline in "ignore thickness" mode as a warning, but fill stays sheet-coloured.
-  const stroke = mode === "naive" ? "#d4724a" : swatch.stroke;
-  const fill = swatch.netFill;
+  const warnStroke = mode === "naive";
 
   return (
     <div className="net-wrap">
       <svg
         viewBox={`0 0 ${svgW} ${svgH}`}
         role="img"
-        aria-label="2D net of open acrylic box"
+        aria-label="2D net of open acrylic box with colour-coded panels"
         className="net-svg"
       >
-        {/* Base */}
         <Panel
+          role="base"
           x={ox}
           y={oy}
           w={bw}
           d={bd}
           t={t}
-          fill={fill}
-          stroke={stroke}
+          warnStroke={warnStroke}
           label={`Base ${formatMm(bw)} × ${formatMm(bd)}`}
         />
-        {/* Front */}
         <Panel
+          role="frontBack"
           x={ox}
           y={oy + bd + gap}
           w={bw}
           d={h}
           t={t}
-          fill={fill}
-          stroke={stroke}
+          warnStroke={warnStroke}
           label={`Front / Back ${formatMm(bw)} × ${formatMm(h)}`}
         />
-        {/* Back */}
         <Panel
+          role="frontBack"
           x={ox}
           y={oy - gap - h}
           w={bw}
           d={h}
           t={t}
-          fill={fill}
-          stroke={stroke}
+          warnStroke={warnStroke}
           label=""
         />
-        {/* Left */}
         <Panel
+          role="leftRight"
           x={ox - gap - h}
           y={oy + (bd - sideD) / 2}
           w={h}
           d={sideD}
           t={t}
-          fill={fill}
-          stroke={stroke}
+          warnStroke={warnStroke}
           label={`Sides ${formatMm(sideD)} × ${formatMm(h)}`}
         />
-        {/* Right */}
         <Panel
+          role="leftRight"
           x={ox + bw + gap}
           y={oy + (bd - sideD) / 2}
           w={h}
           d={sideD}
           t={t}
-          fill={fill}
-          stroke={stroke}
+          warnStroke={warnStroke}
           label=""
         />
       </svg>
@@ -100,32 +94,35 @@ export function NetDiagram({ cut, mode }: Props) {
         {t === 0
           ? `Paper net (${swatch.name}) — panels have no thickness.`
           : mode === "compensated"
-            ? `${formatMm(t)} ${swatch.name} sheet — thickness is built into the cut sizes so the inside stays correct.`
-            : `Same panel sizes as paper, but ${formatMm(t)} ${swatch.name} walls shrink the inside.`}
+            ? `${formatMm(t)} sheet — blue base is wider; green sides are shorter than orange front/back.`
+            : `Same sizes as paper, but ${formatMm(t)} walls shrink the inside (orange outline = warning).`}
       </p>
     </div>
   );
 }
 
 function Panel({
+  role,
   x,
   y,
   w,
   d,
   t,
-  fill,
-  stroke,
+  warnStroke,
   label,
 }: {
+  role: PanelRole;
   x: number;
   y: number;
   w: number;
   d: number;
   t: number;
-  fill: string;
-  stroke: string;
+  warnStroke: boolean;
   label: string;
 }) {
+  const s = panelSwatch(role);
+  const stroke = warnStroke ? "#d4724a" : s.stroke;
+
   return (
     <g>
       <rect
@@ -133,7 +130,7 @@ function Panel({
         y={y}
         width={w}
         height={d}
-        fill={fill}
+        fill={s.netFill}
         stroke={stroke}
         strokeWidth={1.25}
         rx={1}
@@ -144,8 +141,8 @@ function Panel({
           y={y}
           width={Math.min(t, w)}
           height={d}
-          fill={stroke}
-          opacity={0.35}
+          fill={s.side}
+          opacity={0.55}
           stroke="none"
         />
       ) : null}

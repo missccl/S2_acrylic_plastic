@@ -147,3 +147,43 @@ export function sheetColorForThickness(thickness: number): SheetSwatch {
   const key = Math.max(0, Math.min(5, Math.round(thickness))) as ThicknessMm;
   return SHEET_SWATCHES[key];
 }
+
+/** Which laser-cut piece in the open box — each gets its own colour in the 3D view. */
+export type PanelRole = "base" | "frontBack" | "leftRight";
+
+export type PanelSwatch = {
+  label: string;
+  top: string;
+  side: string;
+  stroke: string;
+  netFill: string;
+};
+
+/** Distinct panel colours so students see how pieces overlap and differ in length. */
+export const PANEL_SWATCHES: Record<PanelRole, PanelSwatch> = {
+  base: {
+    label: "Base",
+    top: "#b8d4ff",
+    side: "#4a86e8",
+    stroke: "#6ba3f7",
+    netFill: "rgba(74, 134, 232, 0.34)",
+  },
+  frontBack: {
+    label: "Front / back",
+    top: "#ffe8b8",
+    side: "#e8962f",
+    stroke: "#f0b84a",
+    netFill: "rgba(232, 150, 47, 0.34)",
+  },
+  leftRight: {
+    label: "Left / right",
+    top: "#b8f0d4",
+    side: "#3d9970",
+    stroke: "#52b788",
+    netFill: "rgba(61, 153, 112, 0.34)",
+  },
+};
+
+export function panelSwatch(role: PanelRole): PanelSwatch {
+  return PANEL_SWATCHES[role];
+}

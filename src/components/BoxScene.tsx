@@ -1,7 +1,7 @@
 "use client";
 
-import type { CutList } from "@/lib/geometry";
-import { sheetColorForThickness } from "@/lib/geometry";
+import type { CutList, PanelRole } from "@/lib/geometry";
+import { PANEL_SWATCHES, panelSwatch, sheetColorForThickness } from "@/lib/geometry";
 
 type Props = {
   cut: CutList;
@@ -13,8 +13,9 @@ type Props = {
 };
 
 /**
- * Isometric open-box view in SVG — no WebGL, so it works on school Chromebooks
- * and constrained VMs. Units are millimetres, projected to isometric.
+ * Isometric open-box view in SVG — no WebGL, so it works on school Chromebooks.
+ * Each panel type (base / front-back / left-right) uses a different colour so
+ * students can see thickness at the edges and how shorter side pieces tuck in.
  */
 export function BoxScene({
   cut,
@@ -27,10 +28,8 @@ export function BoxScene({
   const t = Math.max(cut.thickness, 0.01);
   const ox = cut.outerWidth;
   const oz = cut.outerDepth;
-  const oh = cut.outerHeight;
   const e = explode * 18;
 
-  // Isometric projection helpers (mm → svg)
   const scale = 2.2;
   const project = (x: number, y: number, z: number) => {
     const px = (x - z) * Math.cos(Math.PI / 6) * scale;
@@ -38,7 +37,6 @@ export function BoxScene({
     return { x: px, y: -py };
   };
 
-  // Panel corners in local space, then offset for explode
   const base = panelPoints(
     [
       [0, 0, 0],
@@ -104,14 +102,23 @@ export function BoxScene({
         )
       : null;
 
-  const allX = [...base.xs, ...front.xs, ...back.xs, ...left.xs, ...right.xs];
-  const allY = [...base.ys, ...front.ys, ...back.ys, ...left.ys, ...right.ys];
-  const minX = Math.min(...allX) - 20;
-  const maxX = Math.max(...allX) + 20;
-  const minY = Math.min(...allY) - 20;
-  const maxY = Math.max(...allY) + 20;
+  const panels: { role: PanelRole; faces: string[] }[] = [
+    { role: "frontBack", faces: back.faces },
+    { role: "leftRight", faces: left.faces },
+    { role: "base", faces: base.faces },
+    { role: "leftRight", faces: right.faces },
+    { role: "frontBack", faces: front.faces },
+  ];
 
-  const swatch = sheetColorForThickness(cut.thickness);
+  const allPts = [base, front, back, left, right].flatMap((p) =>
+    p.xs.map((x, i) => ({ x, y: p.ys[i] })),
+  );
+  const minX = Math.min(...allPts.map((p) => p.x)) - 20;
+  const maxX = Math.max(...allPts.map((p) => p.x)) + 20;
+  const minY = Math.min(...allPts.map((p) => p.y)) - 20;
+  const maxY = Math.max(...allPts.map((p) => p.y)) + 20;
+
+  const sheet = sheetColorForThickness(cut.thickness);
   const gid = `t${Math.round(cut.thickness)}`;
 
   return (
@@ -120,47 +127,67 @@ export function BoxScene({
         className="iso-svg"
         viewBox={`${minX} ${minY} ${maxX - minX} ${maxY - minY}`}
         role="img"
-        aria-label={`Isometric ${swatch.name} acrylic open box, ${cut.thickness} mm`}
+        aria-label={`Isometric open box, ${cut.thickness} mm acrylic, coloured by panel type`}
       >
         <defs>
-          <linearGradient id={`${gid}-top`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor={swatch.top} stopOpacity="0.92" />
-            <stop offset="100%" stopColor={swatch.side} stopOpacity="0.62" />
-          </linearGradient>
-          <linearGradient id={`${gid}-side`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={swatch.top} stopOpacity="0.78" />
-            <stop offset="100%" stopColor={swatch.side} stopOpacity="0.7" />
-          </linearGradient>
+          {(Object.keys(PANEL_SWATCHES) as PanelRole[]).map((role) => {
+            const s = panelSwatch(role);
+            return (
+              <g key={role}>
+                <linearGradient id={`${gid}-${role}-top`} x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor={s.top} stopOpacity="0.94" />
+                  <stop offset="100%" stopColor={s.side} stopOpacity="0.68" />
+                </linearGradient>
+                <linearGradient id={`${gid}-${role}-side`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={s.top} stopOpacity="0.82" />
+                  <stop offset="100%" stopColor={s.side} stopOpacity="0.78" />
+                </linearGradient>
+              </g>
+            );
+          })}
         </defs>
 
-        {/* Draw back-to-front for simple depth */}
-        <IsoBox faces={back.faces} topId={`${gid}-top`} sideId={`${gid}-side`} stroke={swatch.stroke} />
-        <IsoBox faces={left.faces} topId={`${gid}-top`} sideId={`${gid}-side`} stroke={swatch.stroke} />
-        <IsoBox faces={base.faces} topId={`${gid}-top`} sideId={`${gid}-side`} stroke={swatch.stroke} />
-        <IsoBox faces={right.faces} topId={`${gid}-top`} sideId={`${gid}-side`} stroke={swatch.stroke} />
-        <IsoBox faces={front.faces} topId={`${gid}-top`} sideId={`${gid}-side`} stroke={swatch.stroke} />
+        {panels.map(({ role, faces }, idx) => (
+          <IsoBox key={`${role}-${idx}`} role={role} gid={gid} faces={faces} />
+        ))}
 
         {ghost}
       </svg>
       <p className="scene-hint">
-        Isometric view · {cut.thickness.toFixed(0)} mm · {swatch.name}
+        Isometric view · {cut.thickness.toFixed(0)} mm · {sheet.name}
         {explode > 0.02 ? " · exploded" : ""}
       </p>
+      <ul className="panel-legend" aria-label="Panel colour key">
+        {(Object.keys(PANEL_SWATCHES) as PanelRole[]).map((role) => {
+          const s = panelSwatch(role);
+          return (
+            <li key={role}>
+              <span className="legend-swatch" style={{ background: s.side }} aria-hidden="true" />
+              {s.label}
+            </li>
+          );
+        })}
+        <li className="legend-ghost">
+          <span className="legend-swatch legend-swatch-ghost" aria-hidden="true" />
+          Clear inside
+        </li>
+      </ul>
     </div>
   );
 }
 
 function IsoBox({
+  role,
+  gid,
   faces,
-  topId,
-  sideId,
-  stroke,
 }: {
+  role: PanelRole;
+  gid: string;
   faces: string[];
-  topId: string;
-  sideId: string;
-  stroke: string;
 }) {
+  const s = panelSwatch(role);
+  const topId = `${gid}-${role}-top`;
+  const sideId = `${gid}-${role}-side`;
   const fills = [`url(#${topId})`, `url(#${sideId})`, `url(#${sideId})`];
 
   return (
@@ -170,8 +197,8 @@ function IsoBox({
           key={i}
           d={d}
           fill={fills[i % fills.length]}
-          stroke={stroke}
-          strokeWidth={1.2}
+          stroke={s.stroke}
+          strokeWidth={1.35}
           strokeLinejoin="round"
         />
       ))}
@@ -189,7 +216,6 @@ function panelPoints(
   dz: number,
 ) {
   const pts = corners.map(([x, y, z]) => project(x + dx, y + dy, z + dz));
-  // corners: 0-3 bottom, 4-7 top
   const face = (idx: number[]) =>
     `M ${pts[idx[0]].x} ${pts[idx[0]].y} ` +
     idx
@@ -198,11 +224,7 @@ function panelPoints(
       .join(" ") +
     " Z";
 
-  const faces = [
-    face([4, 5, 6, 7]), // top
-    face([1, 2, 6, 5]), // right-ish
-    face([2, 3, 7, 6]), // front-ish
-  ];
+  const faces = [face([4, 5, 6, 7]), face([1, 2, 6, 5]), face([2, 3, 7, 6])];
 
   return {
     faces,
