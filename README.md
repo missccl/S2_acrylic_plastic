@@ -66,6 +66,24 @@ After deploy:
 - Every push to `main` updates production
 - Every pull request gets a **Preview URL** you can share with students for testing
 
+### If you see `404: NOT_FOUND` on the domain
+
+This usually means one of these Vercel settings — **not** a bug in the app:
+
+1. Open [Vercel Dashboard](https://vercel.com/dashboard) → your project **`s2-acrylic-plastic`**
+2. Click the latest **Production** deployment → **Visit** (use that URL first)
+3. **Settings → Deployment Protection**
+   - Turn **off** protection for **Production** (Vercel Authentication / SSO)
+   - Students need a public site; login walls show as blocked / missing pages
+4. **Settings → Domains**
+   - Confirm `s2-acrylic-plastic.vercel.app` (or your school domain) is listed
+   - If it is missing, click **Add** and assign it to **Production**
+5. Wait ~30 seconds, then open the domain in a private/incognito window
+
+Working team URL pattern (may require Vercel login until protection is off):
+
+`https://s2-acrylic-plastic-missccls-projects.vercel.app`
+
 ### Custom domain (optional)
 
 Vercel → Project → **Settings → Domains** → add your school domain and follow DNS instructions.
